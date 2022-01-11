@@ -1,0 +1,15 @@
+{
+	"name": "Data Lake",
+	"properties": {
+		"parameters": {
+			"DataLakeName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{concat('https://', linkedService().DataLakeName, '.dfs.core.windows.net/')}"
+		}
+	}
+}
