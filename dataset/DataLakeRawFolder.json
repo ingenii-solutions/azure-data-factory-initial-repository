@@ -1,0 +1,38 @@
+{
+	"name": "DataLakeRawFolder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLake",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DataLakeName": {
+					"value": "@dataset().DataLakeName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"DataLakeName": {
+				"type": "string"
+			},
+			"SourceName": {
+				"type": "string"
+			},
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@concat(dataset().SourceName, '/', dataset().TableName)",
+					"type": "Expression"
+				},
+				"fileSystem": "raw"
+			}
+		}
+	}
+}
