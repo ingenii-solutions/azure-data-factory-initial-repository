@@ -2,7 +2,7 @@
 	"name": "DataLakeRawDelimited",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "Data Lake",
+			"referenceName": "DataLake",
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"DataLakeName": {
