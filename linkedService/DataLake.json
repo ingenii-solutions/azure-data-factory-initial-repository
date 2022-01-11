@@ -1,5 +1,5 @@
 {
-	"name": "Data Lake",
+	"name": "DataLake",
 	"properties": {
 		"parameters": {
 			"DataLakeName": {
