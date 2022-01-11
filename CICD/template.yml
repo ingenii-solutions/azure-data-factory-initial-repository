@@ -1,0 +1,149 @@
+parameters:
+- name: environment
+  type: string
+- name: user_assigned_managed_identity_id
+  type: string
+
+steps:
+- script: |
+    if [ -z "$(which az)" ] 
+    then
+      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    fi
+
+    # Allow installation of extensions automatically
+    az config set extension.use_dynamic_install=yes_without_prompt
+  displayName: Install az cli
+
+- script: |
+    if [ -z "$(which jq)" ]; then sudo apt-get install -y jq; fi
+  displayName: Install jq
+
+- bash: echo 'Deploying to the ${{ parameters.environment }} environment'
+
+- script: az login --identity --username ${{ parameters.user_assigned_managed_identity_id }}
+  displayName: 'Get Azure credentials'
+
+- script: |
+    # In case there are several Data Factories dedicated to data ingestion, this will need to be manually updated
+    # This will retrieve the Data Factory name from the secret called 'data-factory-name-<key>-<environment>'
+    echo "##vso[task.setvariable variable=DATA_FACTORY_KEY_NAME]data"
+  displayName: 'Set the Data Factory key name'
+
+- script: |
+    # Get and check the source Data Factory name, from the 'dev' environment
+    DATA_FACTORY_NAME=$(az keyvault secret show --vault-name $(CONFIGURATION_REGISTRY_NAME) --name data-factory-name-$(DATA_FACTORY_KEY_NAME)-dev --query 'value' -o tsv)
+    test "$DATA_FACTORY_NAME" || exit 1
+    echo "##vso[task.setvariable variable=DATA_FACTORY_NAME]$DATA_FACTORY_NAME"
+
+    # Get and check the target Data Factory name
+    TARGET_DATA_FACTORY_NAME=$(az keyvault secret show --vault-name $(CONFIGURATION_REGISTRY_NAME) --name data-factory-name-$(DATA_FACTORY_KEY_NAME)-${{ parameters.environment }} --query 'value' -o tsv)
+    test "$TARGET_DATA_FACTORY_NAME" || exit 1
+    echo "##vso[task.setvariable variable=TARGET_DATA_FACTORY_NAME]$TARGET_DATA_FACTORY_NAME"
+  displayName: 'Get the Data Factory names'
+
+- script: |
+    set -e
+
+    # Create new folder to hold updated definition
+    cp -r $DATA_FACTORY_NAME $TARGET_DATA_FACTORY_NAME
+
+    DEVVAL=''
+    ENVVAL=''
+
+    get_secret () {
+      DEVVAL=$(az keyvault secret show --vault-name $(CONFIGURATION_REGISTRY_NAME) --name $1 --query 'value' -o tsv)
+      local SECRETNAME=$(echo $1 | sed 's/-dev$/-${{ parameters.environment }}/')
+      ENVVAL=$(az keyvault secret show --vault-name $(CONFIGURATION_REGISTRY_NAME) --name $SECRETNAME --query 'value' -o tsv)
+    }
+
+    # Find any secret with the 'infrastructure_identifier' tag that ends with '-dev', and replace with the secret corresponding to the target environment
+    az keyvault secret list --vault-name $(CONFIGURATION_REGISTRY_NAME) --query '[?tags.infrastructure_identifier==`"true"` && ends_with(name, `-dev`)].name' -o tsv | while IFS= read -r secret; do
+        get_secret $secret
+        echo "Replacing $DEVVAL with $ENVVAL . . . "
+        sed -i "s|$DEVVAL|$ENVVAL|g" $TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json
+        sed -i "s|$DEVVAL|$ENVVAL|g" $TARGET_DATA_FACTORY_NAME/ARMTemplateParametersForFactory.json
+    done
+  displayName: 'Create and update templates'
+
+- script: |
+    for FROM_STR in $(jq -c 'keys | .[]' custom_replacements/test.json); do
+        TO_STR=$(cat custom_replacements/${{ parameters.environment }}.json | jq ".[$FROM_STR]")
+
+        echo "Replacing $FROM_STR with $TO_STR . . . "
+
+        sed -i "s|$FROM_STR|$TO_STR|g" $TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json
+        sed -i "s|$FROM_STR|$TO_STR|g" $TARGET_DATA_FACTORY_NAME/ARMTemplateParametersForFactory.json
+
+    done
+  displayName: 'Apply custom replacements'
+
+- script: |
+    echo "Template:"
+    cat $TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json
+    echo "\nParameters:"
+    cat $TARGET_DATA_FACTORY_NAME/ARMTemplateParametersForFactory.json
+  displayName: 'Show the templates we are about to deploy'
+
+- script: |
+    set -e
+
+    TARGET_SUBSCRIPTION_ID=$(az keyvault secret show --vault-name $(CONFIGURATION_REGISTRY_NAME) --name subscription-id-${{ parameters.environment }} --query 'value' -o tsv)
+    test "$TARGET_SUBSCRIPTION_ID" || exit 1
+    echo "##vso[task.setvariable variable=TARGET_SUBSCRIPTION_ID]$TARGET_SUBSCRIPTION_ID"
+
+    TARGET_RESOURCE_GROUP_NAME=$(az datafactory list --subscription $TARGET_SUBSCRIPTION_ID --query "[?name==\`$TARGET_DATA_FACTORY_NAME\`].resourceGroup" -o tsv)
+    test "$TARGET_RESOURCE_GROUP_NAME" || exit 1
+    echo "##vso[task.setvariable variable=TARGET_RESOURCE_GROUP_NAME]$TARGET_RESOURCE_GROUP_NAME"
+  displayName: 'Get target subscription and resource group'
+
+- script: |
+    if [ -z "$(which pwsh)" ] 
+    then
+      # Download the Microsoft repository GPG keys
+      wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+      # Register the Microsoft repository GPG keys
+      sudo dpkg -i packages-microsoft-prod.deb
+      # Update the list of packages after we added packages.microsoft.com
+      sudo apt-get update
+      # Install PowerShell
+      sudo apt-get install -y powershell
+    fi
+  displayName: 'Install Powershell'
+
+- powershell: |
+    try {
+      Get-InstalledModule -Name Az.DataFactory
+    }
+    catch {
+      Install-Module -Name Az.DataFactory -Scope CurrentUser -Repository PSGallery -Force
+    }
+    finally {
+      Connect-AzAccount -Identity -AccountId ${{ parameters.user_assigned_managed_identity_id }} -Subscription $Env:TARGET_SUBSCRIPTION_ID
+    }
+  displayName: Install Az package and authenticate
+
+- powershell: |
+    scripts/pre_post_deployment.ps1 `
+      -armTemplate $Env:TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json `
+      -ResourceGroupName $Env:TARGET_RESOURCE_GROUP_NAME `
+      -DataFactoryName $Env:TARGET_DATA_FACTORY_NAME `
+      -predeployment $true
+  displayName: 'Run the pre-deployment script'
+
+- script: |
+    az deployment group create \
+      --subscription $TARGET_SUBSCRIPTION_ID \
+      --resource-group $TARGET_RESOURCE_GROUP_NAME \
+      --mode Incremental \
+      --parameters @$TARGET_DATA_FACTORY_NAME/ARMTemplateParametersForFactory.json \
+      --template-file $TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json
+  displayName: 'Deploy the updated templates'
+
+- powershell: |
+    scripts/pre_post_deployment.ps1 `
+      -armTemplate $Env:TARGET_DATA_FACTORY_NAME/ARMTemplateForFactory.json `
+      -ResourceGroupName $Env:TARGET_RESOURCE_GROUP_NAME `
+      -DataFactoryName $Env:TARGET_DATA_FACTORY_NAME `
+      -predeployment $false
+  displayName: 'Run the post-deployment script'

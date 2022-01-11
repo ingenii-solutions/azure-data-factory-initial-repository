@@ -1,0 +1,13 @@
+trigger:
+- adf_publish
+
+pool: 'DevOps Deployment'
+
+variables:
+- template: variables.yml 
+
+steps:
+- template: template.yml
+  parameters:
+    environment: 'test'
+    user_assigned_managed_identity_id: $(USER_ASSIGNED_MANAGED_IDENTITY_TEST)
