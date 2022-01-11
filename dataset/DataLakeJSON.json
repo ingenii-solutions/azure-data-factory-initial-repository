@@ -6,13 +6,13 @@
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"DataLakeName": {
-					"value": "@dataset().Data Lake Name",
+					"value": "@dataset().DataLakeName",
 					"type": "Expression"
 				}
 			}
 		},
 		"parameters": {
-			"Data Lake Name": {
+			"DataLakeName": {
 				"type": "string"
 			},
 			"Container": {
@@ -21,7 +21,7 @@
 			"Folder": {
 				"type": "string"
 			},
-			"File Name": {
+			"FileName": {
 				"type": "string"
 			}
 		},
@@ -31,7 +31,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@dataset().File Name",
+					"value": "@dataset().FileName",
 					"type": "Expression"
 				},
 				"folderPath": {
