@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference",
 			"parameters": {
 				"DataLakeName": {
-					"value": "@dataset().Data Lake Name",
+					"value": "@dataset().DataLakeName",
 					"type": "Expression"
 				}
 			}
@@ -18,7 +18,7 @@
 			"Folder": {
 				"type": "String"
 			},
-			"Data Lake Name": {
+			"DataLakeName": {
 				"type": "string"
 			}
 		},
