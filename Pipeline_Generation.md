@@ -7,16 +7,15 @@ All files you want to ingest into the platform need to be uploaded to the `raw` 
 
 ## Adding or updating a data source
 
-In your data engineering repository you can create the configurations that the [Ingenii Azure Data Factory Generator](https://github.com/ingenii-solutions/azure-data-factory-generator) package will read to create the pipelines and other objects we can deploy to Data Factory to pull data into your data platform. Every `.json` file in the `pipeline_generation` folder corresponds to an individual data source; several tables can be defined in one file. The steps to follow are:
+In this repository you can create the configurations that the [Ingenii Azure Data Factory Generator](https://github.com/ingenii-solutions/azure-data-factory-generator) package will read to create the pipelines and other Data Factory objects to pull data in. Every `.json` file in the `pipeline_generation` folder corresponds to an individual data source; several tables can be defined in one `.json` file. The steps to follow are:
 
 1. Check the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md) to see if it supports the type of connector you need to use, such as SFTP or a type of API call. If it's not there, please [raise an issue on the GitHib page](https://github.com/ingenii-solutions/azure-data-factory-generator/issues) so we know to add it in.
-1. Create any external required resources, such as adding a password to the relevant Azure Key Vault so that the pipelines can access it. What each pipeline requires is detailed in the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md).
-1. In the `pipeline_generation` folder, if you want to add a new data source then create a new file, or if you want to update an existing data source by adding tables or changing the configuration then edit the respective file.
-1. Generate the Data Factory resources by running `make create-data-factory-objects` from the root of the repository, which will create the required `.json` files in subfolders in the `pipeline_generation` folder.
-1. Deploy these created items to the Development Data Factory so we can test the changes. The CI/CD pipeline will deploy these new resources, but if there are any issues please see the [Deployment](#deployment) section below for an approach to upload these manually.
-1. In the Development Data Factory check that your functionality is working as it should.
-1. Once you're happy, the last step will be opening a pull request to merge the development branch to the `main` branch, and so deploy your changes to the Production Data Factory. As we say in the [Introduction documentation](./Introduction.md), this branch should include changes to other parts of the repository, so it makes sense to make sure all changes are working as they should before merging the branch.
+2. Create any external required resources, such as adding a password to the relevant Azure Key Vault so that the pipelines can access it. What each pipeline requires is detailed in the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md).
+3. For the next steps you should clone this repository, and for best practices open a new branch based on `main`.
+4. In the `pipeline_generation` folder, if you want to add a new data source then create a new file, or if you want to update an existing data source by adding tables or changing the configuration then edit the respective file.
+5. The generator is a Python package, and so can be installed with `pip install azure_data_factory_generator`. We've also provided a `requirements.txt` file, so instead you can run `pip install -r requirements.txt`.
+6. Generate the Data Factory resources by running `make create-data-factory-objects` from the root of the repository, which will create the required `.json` files in the relevant subfolders.
+7. Add the new and changed files to a commit, and push to update this branch.
+8. Since the Development Data is also integrated with this repository, this is enough for the Data Factory to use these new objects. In the Development Data Factory check that your functionality is working as it should.
 
-## Deployment
-
-Committing the created `.json` files to the branch is enough for them to appear in the Development Data Factory, as it is integrated with this repository.
+From this point this follows the normal CI/CD process just like any other change; please see the `README.md` file on the `adf_publish` branch for full details of the CI/CD process.
