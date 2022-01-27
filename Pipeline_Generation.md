@@ -7,7 +7,7 @@ All files you want to ingest into the platform need to be uploaded to the `raw` 
 
 ## Adding or updating a data source
 
-In this repository you can create the configurations that the [Ingenii Azure Data Factory Generator](https://github.com/ingenii-solutions/azure-data-factory-generator) package will read to create the pipelines and other Data Factory objects to pull data in. Every `.json` file in the `pipeline_generation` folder corresponds to an individual data source; several tables can be defined in one `.json` file. The steps to follow are:
+In this repository you can create the configurations that the [Ingenii Azure Data Factory Generator](https://github.com/ingenii-solutions/azure-data-factory-generator) package will read to create the pipelines and other Data Factory objects to pull data in. Every `.json` file in the `adfg_configs` folder corresponds to an individual data source; several tables can be defined in one `.json` file. The steps to follow are:
 
 1. Check the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md) to see if it supports the type of connector you need to use, such as SFTP or a type of API call. If it's not there, please [raise an issue on the GitHib page](https://github.com/ingenii-solutions/azure-data-factory-generator/issues) so we know to add it in.
 2. Create any external required resources, such as adding a password to the relevant Azure Key Vault so that the pipelines can access it. What each pipeline requires is detailed in the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md).

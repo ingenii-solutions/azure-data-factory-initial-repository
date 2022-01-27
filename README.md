@@ -6,6 +6,7 @@ Provided in this repository are:
 1. Initial linked services and data sets for interacting with the Credential Store Key Vault and the Data Lake that the data files must be uploaded to.
 2. CI/CD pipelines for deploying changes made in your Dev environment to Test and Production. Please see the CI/CD section below for more details.
 3. Instructions for using the [Ingenii Azure Data Factory Generator](https://github.com/ingenii-solutions/azure-data-factory-generator).
+4. An example `Ingenii Azure Data Factory Generator` config file in the `adfg_configs` folder.
 
 ## Resource Names
 
