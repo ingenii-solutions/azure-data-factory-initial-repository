@@ -1,1 +1,1 @@
-azure_data_factory_generator>=0.1.4
+ingeniiadfg>=0.1.5

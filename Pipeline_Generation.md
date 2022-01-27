@@ -11,11 +11,12 @@ In this repository you can create the configurations that the [Ingenii Azure Dat
 
 1. Check the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md) to see if it supports the type of connector you need to use, such as SFTP or a type of API call. If it's not there, please [raise an issue on the GitHib page](https://github.com/ingenii-solutions/azure-data-factory-generator/issues) so we know to add it in.
 2. Create any external required resources, such as adding a password to the relevant Azure Key Vault so that the pipelines can access it. What each pipeline requires is detailed in the [Azure Data Factory Generator documentation](https://github.com/ingenii-solutions/azure-data-factory-generator/blob/main/docs/user/Usage.md).
-3. For the next steps you should clone this repository, and for best practices open a new branch based on `main`.
-4. In the `pipeline_generation` folder, if you want to add a new data source then create a new file, or if you want to update an existing data source by adding tables or changing the configuration then edit the respective file.
-5. The generator is a Python package, and so can be installed with `pip install azure_data_factory_generator`. We've also provided a `requirements.txt` file, so instead you can run `pip install -r requirements.txt`.
-6. Generate the Data Factory resources by running `make create-data-factory-objects` from the root of the repository, which will create the required `.json` files in the relevant subfolders.
-7. Add the new and changed files to a commit, and push to update this branch.
-8. Since the Development Data is also integrated with this repository, this is enough for the Data Factory to use these new objects. In the Development Data Factory check that your functionality is working as it should.
+3. If you have not done so already, clone this repository so you can work with it on your development machine.
+4. For the next steps, the best practice is to open a new branch based on the `main` branch. For more details see the [Azure version control documentation here](https://docs.microsoft.com/en-us/azure/data-factory/source-control#version-control).
+5. In the `adfg_configs` folder, either create a new file for a new data source, or update an existing file by adding tables or changing the overall configuration.
+6. The generator is a Python package, and so can be installed with `pip install ingeniiadfg`. We've also provided a `requirements.txt` file, so instead you can run `pip install -r requirements.txt`.
+7. Generate the Data Factory resources by running `ingeniiadfg generate adfg_configs` from the root of the repository, which will create the required `.json` files in the relevant subfolders.
+8. Add the new and changed files to a commit, and push to update this feature branch.
+9. Since the Development Data is also integrated with this repository, this is enough for the Data Factory to use these new objects, if you go to the Data Factory UI and point it at this branch. Check that your functionality is working as it should.
 
 From this point this follows the normal CI/CD process just like any other change; please see the `README.md` file on the `adf_publish` branch for full details of the CI/CD process.

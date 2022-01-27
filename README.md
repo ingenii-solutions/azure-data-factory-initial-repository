@@ -1,6 +1,6 @@
 # Ingenii Azure Data Factory Initial Repository
 
-This repository is the starting point for any Data Factory meant to pull data into the Ingenii Azure Data Platform. As part of the Platform deployment, a set of Data Factories will have been created related to this repository, one for each environment (e.g. Dev, Test, and Production). Following the structure [recommended by Azure](https://docs.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery), only the Dev Data Factory should be integrated with this repository, ehich has been done already as part of the platform deployment.
+This repository is the starting point for any Data Factory meant to pull data into the Ingenii Azure Data Platform. As part of the Platform deployment, a set of Data Factories will have been created related to this repository, one for each environment (e.g. Dev, Test, and Production). Following the structure [recommended by Azure](https://docs.microsoft.com/en-us/azure/data-factory/continuous-integration-delivery), only the Dev Data Factory should be integrated with this repository, which has been done already as part of the platform deployment.
 
 Provided in this repository are:
 1. Initial linked services and data sets for interacting with the Credential Store Key Vault and the Data Lake that the data files must be uploaded to.
