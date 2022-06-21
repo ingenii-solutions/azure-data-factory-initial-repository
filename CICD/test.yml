@@ -6,8 +6,12 @@ pool: 'DevOps Deployment'
 variables:
 - template: variables.yml 
 
-steps:
-- template: template.yml
-  parameters:
-    environment: 'test'
-    user_assigned_managed_identity_id: $(USER_ASSIGNED_MANAGED_IDENTITY_TEST)
+jobs:
+- job: Deploy
+  # Only deploy if environment exists, equal to if USER_ASSIGNED_MANAGED_IDENTITY_TEST exists
+  condition: ne(variables['USER_ASSIGNED_MANAGED_IDENTITY_TEST'], '')
+  steps:
+  - template: template.yml
+    parameters:
+      environment: 'test'
+      user_assigned_managed_identity_id: $(USER_ASSIGNED_MANAGED_IDENTITY_TEST)
